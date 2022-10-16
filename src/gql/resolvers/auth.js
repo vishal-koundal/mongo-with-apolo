@@ -14,8 +14,8 @@ export default {
 		/**
 		 * It allows to users to register as long as the limit of allowed users has not been reached
 		 */
-		registerUser: async (parent, { email, password }, context) => {
-			if (!email || !password) {
+		registerUser: async (parent, { email, password, name }, context) => {
+			if (!email || !password || !name) {
 				throw new UserInputError('Data provided is not valid');
 			}
 
@@ -37,12 +37,13 @@ export default {
 				throw new UserInputError('Data provided is not valid');
 			}
 
-			await new context.di.model.Users({ email, password }).save();
+			await new context.di.model.Users({ email, password, name }).save();
 
 			const user = await context.di.model.Users.findOne({ email }).lean();
 
 			return {
-				token: context.di.jwt.createAuthToken(user.email, user.isAdmin, user.isActive, user.uuid)
+				token: context.di.jwt.createAuthToken(user.email, user.isAdmin, user.isActive, user.uuid),
+				user: user,
 			};
 		},
 		/**
@@ -68,7 +69,8 @@ export default {
 			await context.di.model.Users.findOneAndUpdate({ email }, { lastLogin: new Date().toISOString() }, { new: true }).lean();
 
 			return {
-				token: context.di.jwt.createAuthToken(user.email, user.isAdmin, user.isActive, user.uuid)
+				token: context.di.jwt.createAuthToken(user.email, user.isAdmin, user.isActive, user.uuid),
+				user: user,
 			};
 		},
 		/**
